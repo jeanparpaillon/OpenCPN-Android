@@ -1621,6 +1621,26 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
             return "66";
         }
 
+        // Validate the viewport "corners" string
+        try {
+            StringTokenizer tkz = new StringTokenizer(s, ";");
+            String tk = tkz.nextToken();
+            double latne = Double.parseDouble(tk);
+
+            tk = tkz.nextToken();
+            double lonne = Double.parseDouble(tk);
+
+            tk = tkz.nextToken();
+            double latsw = Double.parseDouble(tk);
+
+            tk = tkz.nextToken();
+            double lonsw = Double.parseDouble(tk);
+        } catch (Exception e) {
+            Log.i("DEBUGGER_TAG", "invokeGoogleMaps..Error, Invalid VPCorners");
+            return "66";
+        }
+
+
         String v = nativeLib.getVPS();
         Log.i("DEBUGGER_TAG", "initialPositionString" + v);
 
@@ -4780,7 +4800,7 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
 
                     String dest = finalDestination + "/" + soName;
 
-                    if (soName.contains("draw")) {
+                    if (soName.contains("celes")) {
                         dest = finalDestination + "/manPlug/" + soName;
                     }
                     try {

@@ -73,24 +73,27 @@ public class OCPNMapsActivity extends FragmentActivity implements OnMapReadyCall
             vps = extras.getString("VPS");
  //           Log.i("DEBUGGER_TAG", "VPS" + vps);
 
+
             StringTokenizer tkzo = new StringTokenizer(vps, ";");
 
-            String tko = tkzo.nextToken();
-            clat = Double.parseDouble(tko);
+            try {
+                String tko = tkzo.nextToken();
+                clat = Double.parseDouble(tko);     // unused
 
-            tko = tkzo.nextToken();
-            clon = Double.parseDouble(tko);
+                tko = tkzo.nextToken();
+                clon = Double.parseDouble(tko);     // unused
 
-            tko = tkzo.nextToken();
-            scale_ppm = Double.parseDouble(tko);
+                tko = tkzo.nextToken();
+                scale_ppm = Double.parseDouble(tko);    // unused
 
-            tko = tkzo.nextToken();
-            gLat = Double.parseDouble(tko);
+                tko = tkzo.nextToken();
+                gLat = Double.parseDouble(tko);
 
-            tko = tkzo.nextToken();
-            gLon = Double.parseDouble(tko);
-
-
+                tko = tkzo.nextToken();
+                gLon = Double.parseDouble(tko);
+            } catch (Exception e) {
+                Log.i("DEBUGGER_TAG", "OCPNMapsActivity..Error, Invalid VPS");
+            }
         }
 
         setContentView(R.layout.activity_maps);
