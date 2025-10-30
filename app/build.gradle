@@ -12,7 +12,7 @@ android {
         applicationId "org.opencpn.opencpn"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 125
+        versionCode 126
         versionName "5.12.4"
         setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
         archivesBaseName = "$applicationId-v$versionCode($versionName)"
@@ -551,6 +551,12 @@ dependencies {
         rename ('libo-charts_pi.so', 'libo-charts_pi.so64')
     }
 
+    task copyCELESTIAL_PIFiles(type: Copy) {
+        from "/home/dsr/Projects/celestial_navigation_pi/build_a64/libcelestial_navigation_pi.so"
+        into 'src/main/assets/files/plugins'
+        rename ('libcelestial_navigation_pi.so', 'libcelestial_navigation_pi.so64')
+    }
+
     task copyWarchdog_PIFiles64(type: Copy) {
         from "/home/dsr/Projects/watchdog_pi/build_android_64_cci/libwatchdog_pi.so"
 
@@ -665,6 +671,8 @@ dependencies {
         //preBuild.dependsOn(copyOESENC_PIFiles64)
 
         //preBuild.dependsOn(copyOCHARTS_PIFiles)
+
+        //preBuild.dependsOn(copyCELESTIAL_PIFiles)
 
         preBuild.dependsOn(copySERVERFiles32)
         preBuild.dependsOn(copySERVERFiles64)
