@@ -4129,7 +4129,7 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.setType("*/*");       // Need this for ACTION_OPEN_DOCUMENT
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.setType("application/test");
+                    intent.setType("application/text");
                     intent.putExtra(Intent.EXTRA_TITLE, Suggestion);
                     m_filechooserCacheString = Suggestion;
                     intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, selectedTreeUri);
@@ -5800,73 +5800,77 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                     return;
                 }
 
-                Uri documentsTreeUri = SafUtils.getPersistedTreeUri(this);
-                String selectedFilePath = selectedFileUri.getPath();
-
-                // Get the subdir that is the parent of the selected file
-                DocumentFile parentDirectory = null;
-                String subPath = null;
-
-                int cutpoint = selectedFilePath.lastIndexOf("Documents/");
-                if (cutpoint != -1) {
-                    subPath = selectedFilePath.substring(cutpoint + 10);
-                } else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("OpenCPN Information");
-                    builder.setMessage("Objects may only be saved in Documents, or subdirectory of Documents, such as Documents/Routes");
-
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
-                    return;
-                }
-
-                int cutpoint1 = subPath.lastIndexOf('/');
-                if (cutpoint1 != -1) {
-                    subPath = subPath.substring(0, cutpoint1 + 1);
-                    parentDirectory = SafUtils.findParentDirectoryFromPath(this, documentsTreeUri, subPath);
-                }
-                else
-                    parentDirectory = DocumentFile.fromTreeUri(this, documentsTreeUri);
-
-                m_parentDirectory = parentDirectory;
-
-                if (parentDirectory == null) {
-                    return;
-                }
-
                 DocumentFile documentFile = DocumentFile.fromSingleUri(this, selectedFileUri);
-                m_documentFile = DocumentFile.fromSingleUri(this, selectedFileUri);
 
-                // Extract filename component
-                String displayName = selectedFileUri.getPath();
-                int cut = displayName.lastIndexOf('/');
-                if (cut != -1) {
-                    displayName = displayName.substring(cut + 1);
-                }
+                // All of the following file name and duplicate detection requires extracting
+                // a file name string from the selected file URI.
+                // This is universally broken on Android 10, so skip it.
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                    Uri documentsTreeUri = SafUtils.getPersistedTreeUri(this);
+                    String selectedFilePath = selectedFileUri.getPath();
 
-                // Is filename a duplicate, ending with (x) ??
-                int x = displayName.lastIndexOf('(');
-                if (x != -1) {
-                    displayName = displayName.substring(0, x);
-                    displayName = displayName.trim();
+                    // Get the subdir that is the parent of the selected file
+                    DocumentFile parentDirectory = null;
+                    String subPath = null;
 
-                    // Look for an existing file with the same name
-                    boolean bconfirmDialog = false;
-                    String fileName = displayName;
-                    for (DocumentFile file : parentDirectory.listFiles()) {
-                        if (file.getName().equals(fileName)) {
-                            bconfirmDialog = true;
-                            m_FileToDelete = file;
-                            break;
-                        }
+                    int cutpoint = selectedFilePath.lastIndexOf("Documents/");
+                    if (cutpoint != -1) {
+                        subPath = selectedFilePath.substring(cutpoint + 10);
+                    } else {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setTitle("OpenCPN Information");
+                        builder.setMessage("Objects may only be saved in Documents, or subdirectory of Documents, such as Documents/Routes");
+
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        builder.create().show();
+                        return;
                     }
 
-                    if(bconfirmDialog) {
+                    int cutpoint1 = subPath.lastIndexOf('/');
+                    if (cutpoint1 != -1) {
+                        subPath = subPath.substring(0, cutpoint1 + 1);
+                        parentDirectory = SafUtils.findParentDirectoryFromPath(this, documentsTreeUri, subPath);
+                    } else
+                        parentDirectory = DocumentFile.fromTreeUri(this, documentsTreeUri);
+
+                    m_parentDirectory = parentDirectory;
+
+                    if (parentDirectory == null) {
+                        return;
+                    }
+
+                    m_documentFile = DocumentFile.fromSingleUri(this, selectedFileUri);
+
+                    // Extract filename component
+                    String displayName = selectedFileUri.getPath();
+                    int cut = displayName.lastIndexOf('/');
+                    if (cut != -1) {
+                        displayName = displayName.substring(cut + 1);
+                    }
+
+                    // Is filename a duplicate, ending with (x) ??
+                    int x = displayName.lastIndexOf('(');
+                    if (x != -1) {
+                        displayName = displayName.substring(0, x);
+                        displayName = displayName.trim();
+
+                        // Look for an existing file with the same name
+                        boolean bconfirmDialog = false;
+                        String fileName = displayName;
+                        for (DocumentFile file : parentDirectory.listFiles()) {
+                            if (file.getName().equals(fileName)) {
+                                bconfirmDialog = true;
+                                m_FileToDelete = file;
+                                break;
+                            }
+                        }
+
+                        if (bconfirmDialog) {
                             // Dialog to approve overwrite
                             AlertDialog.Builder builder = new AlertDialog.Builder(this);
                             builder.setTitle("Confirmation");
@@ -5876,7 +5880,7 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
 
-                                    if(m_FileToDelete != null)
+                                    if (m_FileToDelete != null)
                                         m_FileToDelete.delete(); // Delete the existing one to avoid Android creating XXX (1).gpx
 
                                     // Delete the chosen suggestion
@@ -5885,8 +5889,7 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                                     if (m_documentFile != null) {
                                         try {
                                             m_documentFile.delete();
-                                        }
-                                        catch (NullPointerException e) {
+                                        } catch (NullPointerException e) {
                                             e.printStackTrace();
                                         }
                                     }
@@ -5897,7 +5900,7 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                                     // Save a reference to the final selected file
                                     File ffr = getFile(m_activity, newFile);
                                     m_fileChooserFinalString = ffr.getAbsolutePath();
-                                    exportMap.put( m_fileChooserFinalString, newFile.getUri().toString() );
+                                    exportMap.put(m_fileChooserFinalString, newFile.getUri().toString());
 
                                     // Copy target file from cache directory into the selected location
                                     SecureFileCopy(getExternalCacheDir() + "/" + m_filechooserCacheString,
@@ -5914,8 +5917,7 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                                     if (m_documentFile != null) {
                                         try {
                                             m_documentFile.delete();
-                                        }
-                                        catch (NullPointerException e) {
+                                        } catch (NullPointerException e) {
                                             e.printStackTrace();
                                         }
                                     }
@@ -5925,37 +5927,37 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
                             builder.create().show();
 
                             return;
-                    }
+                        }
 
-                   return;
+                        return;
+                    }
                 }
 
-                //  This is a new file
+                //  Ready to copy new file from OCPN cache directory to target location
 
                 File ff = getFile(this, documentFile);
                 if (ff != null) {
                     // Save a reference to the final selected file
                     m_fileChooserFinalString = ff.getAbsolutePath();
                     exportMap.put(m_fileChooserFinalString, selectedFileUri.toString());
+                }
 
-                    // Copy target file from cache directory into the selected location
-                    //  Do a local manual copy instead of SecureFileCopy() in order to avoid
-                    //  clearing the exportMap entry for the case of e.g. VDR plugin
-                    //  which needs to make a final file close/copy later when recording stops.
+                // Copy target file from cache directory into the selected location
+                //  Do a local manual copy instead of SecureFileCopy() in order to avoid
+                //  clearing the exportMap entry for the case of e.g. VDR plugin
+                //  which needs to make a final file close/copy later when recording stops.
 
-                    try {
-                        OutputStream outStream = getContentResolver().openOutputStream(selectedFileUri);
-                        FileInputStream inStream = new FileInputStream(getExternalCacheDir() + "/" + m_filechooserCacheString);
-                        copyFile(inStream, outStream);
-                        inStream.close();
-                        outStream.flush();
-                        outStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    OutputStream outStream = getContentResolver().openOutputStream(selectedFileUri);
+                    FileInputStream inStream = new FileInputStream(getExternalCacheDir() + "/" + m_filechooserCacheString);
+                    copyFile(inStream, outStream);
+                    inStream.close();
+                    outStream.flush();
+                    outStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
-
             return;
         }
 
