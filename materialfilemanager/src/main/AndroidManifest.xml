@@ -149,7 +149,7 @@
         <provider
             android:name=".provider.FileManagerProvider"
             android:authorities="bms.ocpnfilemanager.filemanager"
-            android:exported="true"
+            android:exported="false"
             android:permission="android.permission.READ_EXTERNAL_STORAGE" />
 
     </application>
