@@ -1021,7 +1021,7 @@ class FileChooserCore {
 			if(defaultFolder != null) {
 				this.currentFolder = defaultFolder;
 			} else {
-				this.currentFolder = Environment.getExternalStorageDirectory();
+				this.currentFolder = this.chooser.getContext().getExternalFilesDir(null); //Environment.getExternalStorageDirectory();
 			}
 		} else {
 			this.currentFolder = folder;
@@ -1139,7 +1139,7 @@ class FileChooserCore {
                         if(defaultFolder != null) {
                                 this.currentFolder = defaultFolder;
                         } else {
-                                this.currentFolder = Environment.getExternalStorageDirectory();
+                                this.currentFolder = this.chooser.getContext().getExternalFilesDir(null); //Environment.getExternalStorageDirectory();
                         }
                 } else {
                         this.currentFolder = folder;
