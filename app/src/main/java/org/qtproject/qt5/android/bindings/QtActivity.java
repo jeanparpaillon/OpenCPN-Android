@@ -641,6 +641,8 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
 
     private FirebaseAnalytics mFirebaseAnalytics;
 
+    private Insets m_insets;
+
     /**
      * Defines callbacks for service binding, passed to bindService()
      */
@@ -2384,6 +2386,8 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
         }
 
 
+        int navBarHeight = getNavBarHeight();
+
         int actionBarHeight = 0;
         androidx.appcompat.app.ActionBar actionBar = getSupportActionBar();
         if (actionBar.isShowing())
@@ -2391,7 +2395,6 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
         if (android.os.Build.VERSION.SDK_INT >= 35){
             actionBarHeight += getNavBarHeight();
         }
-
 
         // sensible defaults
         int width = 600;
@@ -2456,10 +2459,12 @@ public class QtActivity extends AppCompatActivity  implements Receiver{
 
         String ret;
 
-        ret = String.format("%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%f", dm.xdpi, dm.density, dm.densityDpi,
+        ret = String.format("%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%f;%d;%d;%d;%d;%d",
+                dm.xdpi, dm.density, dm.densityDpi,
                 width, height - statusBarHeight,
                 width, height,
-                dm.widthPixels, dm.heightPixels, actionBarHeight, tsize);
+                dm.widthPixels, dm.heightPixels, actionBarHeight, tsize, navBarHeight,
+                m_insets.left, m_insets.right, m_insets.top, m_insets.bottom);
 
         //Log.i("DEBUGGER_TAG", ret);
 
@@ -7243,9 +7248,9 @@ public void onCreate(Bundle savedInstanceState) {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content),
                         (v, windowInsets) -> {
-                           Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+                            m_insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                             // Apply the insets paddings to the view.
-                            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+                            v.setPadding(m_insets.left, m_insets.top, m_insets.right, m_insets.bottom);
 
                             // Return CONSUMED if you don't want the window insets to keep being
                             // passed down to descendant views.
@@ -8573,7 +8578,31 @@ public void onCreate(Bundle savedInstanceState) {
                     }
 
                 } else {
-                    outStream = new FileOutputStream(outFile);
+                    try {
+                        outStream = new FileOutputStream(outFile);
+                    } catch (Exception e) {
+                        // The target directory need SAF access
+                        // First copy the file to local cache directory.
+                        File file = new File(outFile);
+                        String fileName = file.getName();
+                        String cacheFileName = getExternalCacheDir().getAbsolutePath();
+                        cacheFileName += "/" + fileName;
+                        FileOutputStream outStreamCache = new FileOutputStream(cacheFileName);
+                        FileInputStream inStreamCache = new FileInputStream(inFile);
+                        try {
+                            copyFile(inStreamCache, outStreamCache);
+                        } catch (Exception ec) {
+                            Log.i("OpenCPN", "SecureFileCopy ExceptionF");
+                            return "Exception";
+                        }
+
+                        File ofile = new File(outFile);
+                        String ofileName = ofile.getName();
+
+                        StartSAFDirSelector("Documents", ofileName);
+                        return "OK";
+
+                    }
                 }
             } else {
                 Log.i("OpenCPN", "SecureFileCopy destination on internal storage");
