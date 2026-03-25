@@ -7868,6 +7868,9 @@ public void onCreate(Bundle savedInstanceState) {
 
         super.onPrepareOptionsMenu(menu);
 
+        if (Build.VERSION.SDK_INT < 29)           //10, Scoped storage
+            menu.removeItem(R.id.ocpn_action_filemanager);
+
 
         // Fix action bar menu text color on some late-model Android devices
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {          //18
