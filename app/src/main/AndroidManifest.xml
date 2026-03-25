@@ -124,7 +124,7 @@
 
         <service
             android:name="org.opencpn.GPSServer"
-            android:exported="true"
+            android:exported="false"
             android:foregroundServiceType="location"/>
 
     </application>
