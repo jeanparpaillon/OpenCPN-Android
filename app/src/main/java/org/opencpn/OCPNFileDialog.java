@@ -22,6 +22,8 @@ public class OCPNFileDialog {
     public static void showFileDialog(Activity activity, String startDir,
                                       final Callback cb, boolean allowCreate)
     {
+        Log.i("OpenCPN", startDir);
+
         activity.runOnUiThread(() -> {
 
             final FileChooserDialog dialog = new FileChooserDialog(activity, startDir);
