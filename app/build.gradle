@@ -4,6 +4,12 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+// ABIs to package, comma-separated, supplied by OpenCPN-builder's Makefile as
+// -POCPN_ABIS. Defaults to both so a bare `./gradlew` still builds a fat APK.
+// This single list drives ndk.abiFilters *and* which per-arch copy tasks run,
+// so a single-arch build never references the arch it didn't build.
+def ocpnAbis = ((project.findProperty('OCPN_ABIS') ?: 'armeabi-v7a,arm64-v8a') as String)
+        .split(',').collect { it.trim() }.findAll { it }
 
 android {
     compileSdkVersion 35
@@ -16,7 +22,7 @@ android {
         versionName (project.findProperty('OCPN_VERSION_NAME') ?: "5.14.0")
         setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
         archivesBaseName = "$applicationId-v$versionCode($versionName)"
-        ndk.abiFilters 'armeabi-v7a','arm64-v8a'
+        ndk.abiFilters.addAll(ocpnAbis)
         compileOptions {
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
@@ -41,8 +47,7 @@ android {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
             ndk {
-                abiFilters "armeabi-v7a"
-                abiFilters 'arm64-v8a'
+                abiFilters.addAll(ocpnAbis)
                 //abiFilters 'x86'
             }
         }
@@ -135,6 +140,12 @@ dependencies {
     def Qt_ARM64 = project.findProperty('QT_ARM64') ?: "/usr/src/qt5/arm64"
     // libc++_shared.so must come from the same NDK that built libgorp.so.
     def NDK_Sysroot = project.findProperty('NDK_SYSROOT') ?: ""
+
+    // Arch-independent artifacts (the translation .mo files) are staged once,
+    // outside any per-arch tree, so the APK's languages don't depend on which
+    // arch was built. OpenCPN-builder fills this via -POCPN_BUILD_ALL; the
+    // default falls back to the armhf tree for a side-by-side ./gradlew.
+    def OCPN_Build_All = project.findProperty('OCPN_BUILD_ALL') ?: OCPN_Build
 
 
     //https://docs.gradle.org/current/userguide/working_with_files.html
@@ -305,67 +316,67 @@ dependencies {
     }
 
     task copyLocalefrFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_fr.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/fr_FR.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/fr_FR.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/fr_FR.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/fr_FR.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_fr.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/fr_FR.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/fr_FR.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/fr_FR.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/fr_FR.lproj/opencpn-dashboard_pi.mo"
 
         into 'src/main/assets/files/locale/fr/LC_MESSAGES'
     }
 
     task copyLocaleesFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_es.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/es_ES.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/es_ES.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/es_ES.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/es_ES.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_es.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/es_ES.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/es_ES.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/es_ES.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/es_ES.lproj/opencpn-dashboard_pi.mo"
 
         into 'src/main/assets/files/locale/es/LC_MESSAGES'
     }
 
     task copyLocaledeFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_de.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/de_DE.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/de_DE.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/de_DE.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/de_DE.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_de.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/de_DE.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/de_DE.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/de_DE.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/de_DE.lproj/opencpn-dashboard_pi.mo"
         into 'src/main/assets/files/locale/de/LC_MESSAGES'
     }
 
     task copyLocalesvFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_sv.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/sv_SE.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/sv_SE.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/sv_SE.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/sv_SE.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_sv.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/sv_SE.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/sv_SE.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/sv_SE.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/sv_SE.lproj/opencpn-dashboard_pi.mo"
         into 'src/main/assets/files/locale/sv/LC_MESSAGES'
     }
 
     task copyLocalenbNOFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_nb_NO.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/nb_NO.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/nb_NO.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/nb_NO.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/nb_NO.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_nb_NO.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/nb_NO.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/nb_NO.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/nb_NO.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/nb_NO.lproj/opencpn-dashboard_pi.mo"
         into 'src/main/assets/files/locale/nb_NO/LC_MESSAGES'
     }
 
     task copyLocalefiFIFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_fi_FI.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/fi_FI.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/fi_FI.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/fi_FI.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/fi_FI.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_fi_FI.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/fi_FI.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/fi_FI.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/fi_FI.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/fi_FI.lproj/opencpn-dashboard_pi.mo"
         into 'src/main/assets/files/locale/fi_FI/LC_MESSAGES'
     }
 
     task copyLocaleitFiles(type: Copy) {
-        from "${OCPN_Build}/Resources/opencpn_it.lproj/opencpn.mo"
-        from "${OCPN_Build}/plugins/chartdldr_pi/Resources/it_IT.lproj/opencpn-chartdldr_pi.mo"
-        from "${OCPN_Build}/plugins/wmm_pi/Resources/it_IT.lproj/opencpn-wmm_pi.mo"
-        from "${OCPN_Build}/plugins/grib_pi/Resources/it_IT.lproj/opencpn-grib_pi.mo"
-        from "${OCPN_Build}/plugins/dashboard_pi/Resources/it_IT.lproj/opencpn-dashboard_pi.mo"
+        from "${OCPN_Build_All}/Resources/opencpn_it.lproj/opencpn.mo"
+        from "${OCPN_Build_All}/plugins/chartdldr_pi/Resources/it_IT.lproj/opencpn-chartdldr_pi.mo"
+        from "${OCPN_Build_All}/plugins/wmm_pi/Resources/it_IT.lproj/opencpn-wmm_pi.mo"
+        from "${OCPN_Build_All}/plugins/grib_pi/Resources/it_IT.lproj/opencpn-grib_pi.mo"
+        from "${OCPN_Build_All}/plugins/dashboard_pi/Resources/it_IT.lproj/opencpn-dashboard_pi.mo"
         into 'src/main/assets/files/locale/it/LC_MESSAGES'
     }
 
@@ -559,17 +570,22 @@ dependencies {
         preBuild.dependsOn(copyLocalefiFIFiles)
         preBuild.dependsOn(copyLocaleitFiles)
 
-        preBuild.dependsOn(copyWMM_PIFiles)
-        preBuild.dependsOn(copyDNLDR_PIFiles)
-        preBuild.dependsOn(copyGRIB_PIFiles)
-        preBuild.dependsOn(copyDASHBOARD_PIFiles)
-        //preBuild.dependsOn(copySQUIDDIO_PIFiles)
+        // Per-arch plugin .so copies — only for the ABIs we actually built.
+        if ('armeabi-v7a' in ocpnAbis) {
+            preBuild.dependsOn(copyWMM_PIFiles)
+            preBuild.dependsOn(copyDNLDR_PIFiles)
+            preBuild.dependsOn(copyGRIB_PIFiles)
+            preBuild.dependsOn(copyDASHBOARD_PIFiles)
+            //preBuild.dependsOn(copySQUIDDIO_PIFiles)
+        }
 
-        preBuild.dependsOn(copyWMM_PIFiles64)
-        preBuild.dependsOn(copyDNLDR_PIFiles64)
-        preBuild.dependsOn(copyGRIB_PIFiles64)
-        preBuild.dependsOn(copyDASHBOARD_PIFiles64)
-        //preBuild.dependsOn(copySQUIDDIO_PIFiles64)
+        if ('arm64-v8a' in ocpnAbis) {
+            preBuild.dependsOn(copyWMM_PIFiles64)
+            preBuild.dependsOn(copyDNLDR_PIFiles64)
+            preBuild.dependsOn(copyGRIB_PIFiles64)
+            preBuild.dependsOn(copyDASHBOARD_PIFiles64)
+            //preBuild.dependsOn(copySQUIDDIO_PIFiles64)
+        }
 
         preBuild.dependsOn(copyWMM_PIDataFiles)
         preBuild.dependsOn(copyDNLDR_PIDataFiles)
@@ -582,14 +598,19 @@ dependencies {
         //preBuild.dependsOn(copyQTPlugins_armeabi_v7a)
         //preBuild.dependsOn(copyQTPlugins_arm64_v8a)
 
-        preBuild.dependsOn(copyQTLibs_armeabi_v7a)
-        preBuild.dependsOn(copyQTLibs_arm64_v8a)
+        // Per-arch Qt libs, libc++_shared.so and the core lib — only for the
+        // ABIs we actually built.
+        if ('armeabi-v7a' in ocpnAbis) {
+            preBuild.dependsOn(copyQTLibs_armeabi_v7a)
+            preBuild.dependsOn(copyCxxShared_armeabi_v7a)
+            preBuild.dependsOn(copyOCPN_CORE)
+        }
 
-        preBuild.dependsOn(copyCxxShared_armeabi_v7a)
-        preBuild.dependsOn(copyCxxShared_arm64_v8a)
-
-        preBuild.dependsOn(copyOCPN_CORE)
-        preBuild.dependsOn(copyOCPN_CORE_64)
+        if ('arm64-v8a' in ocpnAbis) {
+            preBuild.dependsOn(copyQTLibs_arm64_v8a)
+            preBuild.dependsOn(copyCxxShared_arm64_v8a)
+            preBuild.dependsOn(copyOCPN_CORE_64)
+        }
 
 
 
