@@ -12,8 +12,8 @@ android {
         applicationId "org.opencpn.opencpn"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 128
-        versionName "5.14.0"
+        versionCode ((project.findProperty('OCPN_VERSION_CODE') ?: "128") as int)
+        versionName (project.findProperty('OCPN_VERSION_NAME') ?: "5.14.0")
         setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
         archivesBaseName = "$applicationId-v$versionCode($versionName)"
         ndk.abiFilters 'armeabi-v7a','arm64-v8a'
@@ -30,6 +30,16 @@ android {
             //signingConfig signingConfigs.release
         }
         debug {
+            // Install alongside a stock OpenCPN instead of colliding with it.
+            // Android keys installed apps on applicationId, so the suffix gives
+            // the debug build its own package name — and its own data dir, so
+            // test routes/charts stay separate from the Play Store app. Two
+            // things that are hardcoded to the base package rather than derived
+            // from applicationId are fixed to match: the FileProvider authority
+            // (src/debug/res/values/strings.xml) and a self-lookup in
+            // QtActivity.java. See docs/android-build.md.
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
             ndk {
                 abiFilters "armeabi-v7a"
                 abiFilters 'arm64-v8a'

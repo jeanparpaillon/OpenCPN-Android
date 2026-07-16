@@ -6840,7 +6840,12 @@ public void onCreate(Bundle savedInstanceState) {
 
 
         try {
-            ApplicationInfo ainfo = this.getApplicationContext().getPackageManager().getApplicationInfo("org.opencpn.opencpn", PackageManager.GET_SHARED_LIBRARY_FILES);
+            // Look up *this* app's native library dir, not a hardcoded package
+            // name: with the debug build's ".debug" applicationIdSuffix the
+            // literal "org.opencpn.opencpn" would resolve to a stock install if
+            // present (loading its libgorp.so) or throw if not. getPackageName()
+            // returns the running package, suffix included.
+            ApplicationInfo ainfo = this.getApplicationContext().getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_SHARED_LIBRARY_FILES);
             Log.i("OpenCPN", "native library dir " + ainfo.nativeLibraryDir);
             m_nativeLibraryDir = ainfo.nativeLibraryDir;
         } catch (Exception e) {
