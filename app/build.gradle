@@ -456,54 +456,55 @@ dependencies {
         into 'libs'
     }
 
+    // Qt 5.14+ ships one multi-ABI Android build, so every staged Qt library and
+    // plugin carries an ABI suffix (libQt5Core_armeabi-v7a.so) and keeps that
+    // suffix in its SONAME. The unsuffixed compat symlinks the builder stages
+    // alongside them (install-qt-android.sh) are for build-time linking only:
+    // what the APK bundles must be the real suffixed files, because libgorp.so's
+    // NEEDED entries and Qt's own inter-library references use the suffixed
+    // SONAMEs. So copy the suffixed files verbatim (no rename to the old
+    // libplugins_platforms_android_* names).
+    //
+    // NOTE: the platform/style plugin *load* wiring (which names QtLoader looks
+    // for) is set by Qt's Java side — the checked-in org.qtproject.qt5.android
+    // bindings + QtAndroid*.jar — which must be updated to 5.15.2 in lockstep
+    // (see TODO.md). These names match a 5.15.2 bundle; verify on first launch.
     task copyQTPlugins_armeabi_v7a(type: Copy) {
-        from "${Qt_ARMHF}/plugins/platforms/android/libqtforandroid.so"
-        from "${Qt_ARMHF}/plugins/styles/libqandroidstyle.so"
+        from "${Qt_ARMHF}/plugins/platforms/libplugins_platforms_qtforandroid_armeabi-v7a.so"
+        from "${Qt_ARMHF}/plugins/styles/libplugins_styles_qandroidstyle_armeabi-v7a.so"
         into 'src/main/assets/files/Qtplugins/armeabi-v7a'
-
-        rename ('libqtforandroid.so', 'libplugins_platforms_android_libqtforandroid.so')
-        rename ('libqandroidstyle.so', 'libplugins_styles_libqandroidstyle.so')
     }
 
     task copyQTPlugins_arm64_v8a(type: Copy) {
-        from "${Qt_ARM64}/plugins/platforms/android/libqtforandroid.so"
-        from "${Qt_ARM64}/plugins/styles/libqandroidstyle.so"
+        from "${Qt_ARM64}/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.so"
+        from "${Qt_ARM64}/plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so"
         into 'src/main/assets/files/Qtplugins/arm64-v8a'
-
-        rename ('libqtforandroid.so', 'libplugins_platforms_android_libqtforandroid.so')
-        rename ('libqandroidstyle.so', 'libplugins_styles_libqandroidstyle.so')
     }
 
     task copyQTLibs_armeabi_v7a(type: Copy) {
-        from "${Qt_ARMHF}/lib/libQt5Core.so"
-        from "${Qt_ARMHF}/lib/libQt5Gui.so"
-        from "${Qt_ARMHF}/lib/libQt5OpenGL.so"
-        from "${Qt_ARMHF}/lib/libQt5Test.so"
-        from "${Qt_ARMHF}/lib/libQt5Widgets.so"
-        from "${Qt_ARMHF}/lib/libQt5AndroidExtras.so"
-        from "${Qt_ARMHF}/plugins/platforms/android/libqtforandroid.so"
-        from "${Qt_ARMHF}/plugins/styles/libqandroidstyle.so"
+        from "${Qt_ARMHF}/lib/libQt5Core_armeabi-v7a.so"
+        from "${Qt_ARMHF}/lib/libQt5Gui_armeabi-v7a.so"
+        from "${Qt_ARMHF}/lib/libQt5OpenGL_armeabi-v7a.so"
+        from "${Qt_ARMHF}/lib/libQt5Test_armeabi-v7a.so"
+        from "${Qt_ARMHF}/lib/libQt5Widgets_armeabi-v7a.so"
+        from "${Qt_ARMHF}/lib/libQt5AndroidExtras_armeabi-v7a.so"
+        from "${Qt_ARMHF}/plugins/platforms/libplugins_platforms_qtforandroid_armeabi-v7a.so"
+        from "${Qt_ARMHF}/plugins/styles/libplugins_styles_qandroidstyle_armeabi-v7a.so"
 
         into 'src/main/jniLibs/armeabi-v7a'
-
-        rename ('libqtforandroid.so', 'libplugins_platforms_android_libqtforandroid.so')
-        rename ('libqandroidstyle.so', 'libplugins_styles_libqandroidstyle.so')
     }
 
     task copyQTLibs_arm64_v8a(type: Copy) {
-        from "${Qt_ARM64}/lib/libQt5Core.so"
-        from "${Qt_ARM64}/lib/libQt5Gui.so"
-        from "${Qt_ARM64}/lib/libQt5OpenGL.so"
-        from "${Qt_ARM64}/lib/libQt5Test.so"
-        from "${Qt_ARM64}/lib/libQt5Widgets.so"
-        from "${Qt_ARM64}/lib/libQt5AndroidExtras.so"
-        from "${Qt_ARM64}/plugins/platforms/android/libqtforandroid.so"
-        from "${Qt_ARM64}/plugins/styles/libqandroidstyle.so"
+        from "${Qt_ARM64}/lib/libQt5Core_arm64-v8a.so"
+        from "${Qt_ARM64}/lib/libQt5Gui_arm64-v8a.so"
+        from "${Qt_ARM64}/lib/libQt5OpenGL_arm64-v8a.so"
+        from "${Qt_ARM64}/lib/libQt5Test_arm64-v8a.so"
+        from "${Qt_ARM64}/lib/libQt5Widgets_arm64-v8a.so"
+        from "${Qt_ARM64}/lib/libQt5AndroidExtras_arm64-v8a.so"
+        from "${Qt_ARM64}/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.so"
+        from "${Qt_ARM64}/plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so"
 
         into 'src/main/jniLibs/arm64-v8a'
-
-        rename ('libqtforandroid.so', 'libplugins_platforms_android_libqtforandroid.so')
-        rename ('libqandroidstyle.so', 'libplugins_styles_libqandroidstyle.so')
     }
 
 
@@ -520,14 +521,22 @@ dependencies {
         into 'src/main/jniLibs/arm64-v8a'
     }
 
+    // The Qt 5.14+ loader (QtLoader, via android.app.lib_name=gorp) loads the
+    // main library as libgorp_<abi>.so — it appends "_" + preferredAbi. So the
+    // core lib, produced by the build as libgorp.so, must land in jniLibs under
+    // the ABI-suffixed name. (Its own SONAME is irrelevant: nothing links it; the
+    // loader dlopens it by this path, and its Qt NEEDED entries — already
+    // suffixed — resolve against the suffixed Qt libs bundled above.)
     task copyOCPN_CORE(type: Copy) {
         from "${OCPN_Build}/libgorp.so"
         into 'src/main/jniLibs/armeabi-v7a'
+        rename ('libgorp.so', 'libgorp_armeabi-v7a.so')
     }
 
     task copyOCPN_CORE_64(type: Copy) {
         from "${OCPN_Build_64}/libgorp.so"
         into 'src/main/jniLibs/arm64-v8a'
+        rename ('libgorp.so', 'libgorp_arm64-v8a.so')
     }
 
 
